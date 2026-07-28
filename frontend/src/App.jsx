@@ -1,22 +1,28 @@
 import { useState, useEffect } from 'react'
 import ThumbnailCard from './components/ThumbnailCard'
+import LoginForm from './components/LoginForm'
 
 function App() {
+  const [token, setToken] = useState(localStorage.getItem('token'))
   const [thumbnails, setThumbnails] = useState([])
 
   useEffect(() => {
+    if (!token) return
+
     async function fetchThumbnails() {
       const response = await fetch('http://127.0.0.1:8000/thumbnails/', {
-        headers: {
-          Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzg1MDkxODgyfQ.jOnzQ0EUI2tmxNJBVP3vavl-InfrEL2HDFN1J_idu9E',
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
       const data = await response.json()
       setThumbnails(data)
     }
 
     fetchThumbnails()
-  }, [])
+  }, [token])
+
+  if (!token) {
+    return <LoginForm onLoginSuccess={(newToken) => setToken(newToken)} />
+  }
 
   return (
     <div>
