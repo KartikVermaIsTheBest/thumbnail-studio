@@ -29,15 +29,28 @@ function App() {
     setThumbnails((prev) => [newThumbnail, ...prev])
   }
 
+  function handleLogout(){
+    localStorage.removeItem('token')
+    setToken(null)
+  }
+
   return (
     <div>
       <h1>Thumbnail Studio</h1>
+      <button onClick={handleLogout}>Log Out</button>
       <CreateThumbnailForm token={token} onThumbnailCreated={handleNewThumbnail} />
       {thumbnails.map((thumb) => (
-        <ThumbnailCard key={thumb.id} prompt={thumb.prompt} imageUrl={thumb.image_url} />
+        <ThumbnailCard
+          key={thumb.id}
+          id={thumb.id}
+          prompt={thumb.prompt}
+          imageUrl={thumb.image_url}
+          token={token}
+        />
       ))}
     </div>
   )
 }
+
 
 export default App
