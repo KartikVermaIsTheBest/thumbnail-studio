@@ -1,44 +1,69 @@
-import { useState, useEffect } from 'react'
-import ThumbnailCard from './components/ThumbnailCard'
-import LoginForm from './components/LoginForm'
-import CreateThumbnailForm from './components/CreateThumbnailForm'
+import { useState, useEffect } from "react";
+import ThumbnailCard from "./components/ThumbnailCard";
+import LoginForm from "./components/LoginForm";
+import CreateThumbnailForm from "./components/CreateThumbnailForm";
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('token'))
-  const [thumbnails, setThumbnails] = useState([])
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [thumbnails, setThumbnails] = useState([]);
 
   useEffect(() => {
-    if (!token) return
+    if (!token) return;
 
     async function fetchThumbnails() {
-      const response = await fetch('http://127.0.0.1:8000/thumbnails/', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await response.json()
-      setThumbnails(data)
+      try {
+        const response = await apiFetch("/thumbnails/");
+        const data = await response.json();
+        setThumbnails(data);
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    fetchThumbnails()
-  }, [token])
+    fetchThumbnails();
+  }, [token]);
 
   if (!token) {
-    return <LoginForm onLoginSuccess={(newToken) => setToken(newToken)} />
+    return <LoginForm onLoginSuccess={(newToken) => setToken(newToken)} />;
   }
 
   function handleNewThumbnail(newThumbnail) {
-    setThumbnails((prev) => [newThumbnail, ...prev])
+    setThumbnails((prev) => [newThumbnail, ...prev]);
   }
 
-  function handleLogout(){
-    localStorage.removeItem('token')
-    setToken(null)
+  function handleLogout() {
+    localStorage.removeItem("token");
+    setToken(null);
   }
+
+  async function apiFetch(path, options = {}) {
+    const response = await fetch(`http://127.0.0.1:8000${path}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      setToken(null);
+      throw new Error("Session expired, please log in again");
+    }
+
+    return response;
+  }
+
+
 
   return (
     <div>
       <h1>Thumbnail Studio</h1>
       <button onClick={handleLogout}>Log Out</button>
-      <CreateThumbnailForm token={token} onThumbnailCreated={handleNewThumbnail} />
+      <CreateThumbnailForm
+        apiFetch={apiFetch}
+        onThumbnailCreated={handleNewThumbnail}
+      />
       {thumbnails.map((thumb) => (
         <ThumbnailCard
           key={thumb.id}
@@ -49,8 +74,7 @@ function App() {
         />
       ))}
     </div>
-  )
+  );
 }
 
-
-export default App
+export default App;

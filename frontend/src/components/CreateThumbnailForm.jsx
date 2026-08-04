@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function CreateThumbnailForm({ token, onThumbnailCreated }) {
+function CreateThumbnailForm({ apiFetch, onThumbnailCreated }) {
   const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -11,18 +11,13 @@ function CreateThumbnailForm({ token, onThumbnailCreated }) {
     setError(null)
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/thumbnails/', {
+      const response = await apiFetch('/thumbnails/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, width: 1280, height: 720 }),
       })
 
-      if (!response.ok) {
-        throw new Error('Generation failed')
-      }
+      if (!response.ok) throw new Error('Generation failed')
 
       const newThumbnail = await response.json()
       onThumbnailCreated(newThumbnail)
